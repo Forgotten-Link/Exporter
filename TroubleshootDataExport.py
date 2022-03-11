@@ -11,33 +11,50 @@ fext = ''
 def write():
     now = datetime.now()
     date = now.strftime("%m/%d/%y %H:%M")
-    outfile = open(values['-file-'], 'a')
-    if os.stat(values['-file-']).st_size == 0:
+    
+    if values['-Name-']=='' or values['-Station-']=='' or values['-Slot-']=='' or values['-FailCode-']=='' or values['-FixDescription-']=='' or values['-file-']=='':
+        sg.Popup('Error. Missing file or input.',title = 'Error',auto_close = True,auto_close_duration = 10)
+
+    elif os.stat(values['-file-']).st_size == 0:
+        outfile = open(values['-file-'], 'a')
         outfile.write("Name" +';')
         outfile.write("Station" +';')
         outfile.write("Slot" +';')
         outfile.write("Fail Code" +';')
         outfile.write("Fix Description" +';')
-        outfile.write("Date" + "\n")
-        
-    outfile.write(values['-Name-']+';')
-    outfile.write(values['-Station-']+';')
-    outfile.write(values['-Slot-']+';')
-    outfile.write(values['-FailCode-']+';')
-    outfile.write(values['-FixDescription-']+';')
-    outfile.write(date + "\n")
-    window['-Name-']('')
-    window['-Station-']('')
-    window['-Slot-']('')
-    window['-FailCode-']('')
-    window['-FixDescription-']('')
-    sg.Popup('Done',title = 'Success',auto_close = True,auto_close_duration = 0.5)
-    window['-Name-'].SetFocus(force = True)
-    window.refresh
+        outfile.write("Date" + "\n")   
+        outfile.write(values['-Name-']+';')
+        outfile.write(values['-Station-']+';')
+        outfile.write(values['-Slot-']+';')
+        outfile.write(values['-FailCode-']+';')
+        outfile.write(values['-FixDescription-']+';')
+        outfile.write(date + "\n")
+        window['-Name-']('')
+        window['-Station-']('')
+        window['-Slot-']('')
+        window['-FailCode-']('')
+        window['-FixDescription-']('')
+        sg.Popup('Done',title = 'Success',auto_close = True,auto_close_duration = 0.5)
+        window['-Name-'].SetFocus(force = True)
+        outfile.close()
+    elif os.stat(values['-file-']).st_size >= 1: 
+        outfile = open(values['-file-'], 'a')   
+        outfile.write(values['-Name-']+';')
+        outfile.write(values['-Station-']+';')
+        outfile.write(values['-Slot-']+';')
+        outfile.write(values['-FailCode-']+';')
+        outfile.write(values['-FixDescription-']+';')
+        outfile.write(date + "\n")
+        window['-Name-']('')
+        window['-Station-']('')
+        window['-Slot-']('')
+        window['-FailCode-']('')
+        window['-FixDescription-']('')
+        sg.Popup('Done',title = 'Success',auto_close = True,auto_close_duration = 0.5)
+        window['-Name-'].SetFocus(force = True)
+        outfile.close()
+          
     
-    
-        
-    outfile.close()
 
 def convert():
     p = Path(values['-file-'])
@@ -45,9 +62,14 @@ def convert():
     window['-file-']('')
     sg.Popup('Done. Select file again',title = 'Success',auto_close = True,auto_close_duration = 4)
 
+# ------ Menu Definition ------ #
+menu_def = [['&File', ['&Open']],
+            ['&Convert', ['.txt', '.csv'],]]
+            
 
 layout = [
-    [sg.Text('Select File'),sg.In(readonly=True,key='-file-'), sg.FileBrowse(key='-Browse-'),],
+    [sg.Menu(menu_def)],
+    [sg.Text('Selected File', size=(15, 1)),sg.In(readonly=True,key='-file-'),],
 
     [sg.Text('')],
     [sg.Text('Name', size=(15, 1)),sg.InputText(key='-Name-')],
@@ -57,22 +79,13 @@ layout = [
     [sg.Text('Fix Description', size=(15, 1)),sg.InputText(key='-FixDescription-')],
     [sg.Button('Submit',bind_return_key=True,key='-Submit-')],
 
-    [sg.Text('_______________')],
-    [sg.Text('File Options')],
-    [sg.Radio('txt', "RADIO1", default=True,key='-txt-')],
-    [sg.Radio('csv', "RADIO1",key='-csv-')],
-    [sg.Button('Convert',key='-Convert-')]
-
 ]
 
-window = sg.Window('Troubleshoot Data Export', layout, size=(500,400),use_default_focus=False,finalize=True)
+
+window = sg.Window('Troubleshoot Data Export', layout, size=(500,235),use_default_focus=False,finalize=True)
 
 window['-file-'].block_focus(block = True)
-window['-Browse-'].block_focus(block = True)
 window['-Submit-'].block_focus(block = True)
-window['-txt-'].block_focus(block = True)
-window['-csv-'].block_focus(block = True)
-window['-Convert-'].block_focus(block = True)
 
 try:
     while True:
@@ -81,12 +94,16 @@ try:
            break
       if event == '-Submit-':
            write()
-      if values['-txt-'] == True:
+      if event == '.txt':
            fext = '.txt'
-      if values['-csv-'] == True:
-           fext = '.csv'
-      if event == '-Convert-':
            convert()
+      if event == '.csv':
+           fext = '.csv'
+           convert()
+      if event == 'Open':
+           window['-file-'](sg.popup_get_file(message='Select File'))
+          
+
 except Exception as e:
     tb = traceback.format_exc()
     #sg.Print(f'An error happened.  Here is the info:', e, tb)
